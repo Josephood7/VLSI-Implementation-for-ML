@@ -1,0 +1,3 @@
+./verilogB/mac.v
+./verilogB/mac_tb.v
+./verilogB/mac_wrapper.v
