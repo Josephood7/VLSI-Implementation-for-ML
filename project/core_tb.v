@@ -325,6 +325,7 @@ initial begin
   ////////// Accumulation /////////
   //out_file = $fopen("out.txt", "r");  
   out_file = $fopen("ws_output.txt", "r");  
+  acc_file = $fopen("acc_address.txt", "r");
   // Following three lines are to remove the first three comment lines of the file
   out_scan_file = $fscanf(out_file,"%s", answer); 
   out_scan_file = $fscanf(out_file,"%s", answer); 
@@ -363,7 +364,7 @@ initial begin
 
       #0.5 clk = 1'b0;   
         if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
-                       else  begin CEN_pmem = 1; WEN_pmem = 1; end
+        else  begin CEN_pmem = 1; WEN_pmem = 1; end
 
         if (j>0)  acc = 1;  
       #0.5 clk = 1'b1;   
