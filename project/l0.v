@@ -20,39 +20,33 @@ module l0 (clk, in, out, rd, wr, o_full, reset, o_ready);
   
   genvar i;
 
-  assign o_ready = ?? ;
-  assign o_full  = ?? ;
+  assign o_ready = !(|full);
+  assign o_full  = (|full);
 
-
-  for (i=0; i<row ; i=i+1) begin : row_num
-      fifo_depth64 #(.bw(bw)) fifo_instance (
-	 .rd_clk(clk),
-	 .wr_clk(clk),
-	 .rd(rd_en[i]),
-	 .wr(...),
-         .o_empty(...),
-         .o_full(...),
-	 .in(...),
-	 .out(...),
-         .reset(reset));
-  end
-
-
+  generate
+    for(i = 0; i < row; i=i+1) begin : fifo_num
+        fifo_depth64 #(.bw(bw)) fifo_inst(
+         .rd_clk(clk),
+         .wr_clk(clk),
+         .rd(rd_en[i]),
+         .wr(wr),
+         .reset(reset),
+         .o_full(full[i]),
+         .o_empty(empty[i]),
+         .in(in[(i+1)*bw- 1 : i*bw]),
+         .out(out[(i+1)*bw- 1 : i*bw])
+      );
+    end
+  endgenerate
   always @ (posedge clk) begin
    if (reset) begin
       rd_en <= 8'b00000000;
    end
    else
-
-      /////////////// version1: read all row at a time ////////////////
-      ...
-      ///////////////////////////////////////////////////////
-
-
-
-      //////////////// version2: read 1 row at a time /////////////////
-      ...
-      ///////////////////////////////////////////////////////
+      //Version 1
+      // rd_en <= {8{rd}};
+      //Version 2
+      rd_en <= {rd_en[row-2:0],rd};
     end
 
 endmodule
