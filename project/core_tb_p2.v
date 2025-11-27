@@ -4,6 +4,8 @@
 
 `define BIT4 0
 `define BIT2 1
+`define WS 0
+`define OS 1
 
 module core_tb;
 
@@ -14,6 +16,7 @@ parameter len_onij = 16; // output image = 4 x 4
 parameter col = 8;
 parameter row = 8;
 parameter len_nij = 36;  // input image = 6 x 6
+parameter len_kij_sqrt = 3;
 
 reg clk = 0;
 reg reset = 1;
@@ -62,7 +65,7 @@ wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
 
 reg [31:0] D_2D [63:0];
-reg mode = `BIT4;
+reg [1:0] mode = 0;
 
 
 integer x_file, x_scan_file ; // file_handler
@@ -104,17 +107,17 @@ initial begin
   $dumpvars(0,core_tb);
 
   // 2-bit mode
-  mode = `BIT2;
+  mode = {`WS, `BIT2};
   reset_hardware();
   $display("Part 2: 2-bit mode test");
-  run_sim("activation.txt", "weight", "output.txt");
+  run_sim("txt_files/activation.txt", "txt_files/weight", "txt_files/output.txt");
 
   // 4-bit mode
   #20;
   reset_hardware();
-  mode = `BIT4;
+  mode = {`WS, `BIT4};
   $display("Part 2: 4-bit mode test");
-  run_sim("activation.txt", "weight", "output.txt");
+  run_sim("txt_files/activation.txt", "txt_files/weight", "txt_files/output.txt");
 
   #10 $finish;
 end
@@ -355,7 +358,7 @@ task run_sim;
   ////////// Accumulation /////////
   //out_file = $fopen("out.txt", "r");  
   out_file = $fopen(out_file, "r");  
-  acc_file = $fopen("acc_address.txt", "r");
+  //acc_file = $fopen("acc_address.txt", "r");
   // Following three lines are to remove the first three comment lines of the file
   out_scan_file = $fscanf(out_file,"%s", answer); 
   out_scan_file = $fscanf(out_file,"%s", answer); 
@@ -389,12 +392,21 @@ task run_sim;
     #0.5 clk = 1'b1;  
     #0.5 clk = 1'b0; reset = 0; 
     #0.5 clk = 1'b1;  
+    A_pmem = 0;
 
     for (j=0; j<len_kij+1; j=j+1) begin 
 
       #0.5 clk = 1'b0;   
-        if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
-        else  begin CEN_pmem = 1; WEN_pmem = 1; end
+        if (j<len_kij) begin
+          CEN_pmem = 0; WEN_pmem = 1; 
+          case((j / len_kij_sqrt) % len_kij_sqrt)
+            0: A_pmem = (11'd0 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt);   // 0
+            1: A_pmem = (11'd114 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt); // 114
+            2: A_pmem = (11'd228 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt); // 228
+          endcase
+        end else begin
+          CEN_pmem = 1; WEN_pmem = 1;
+        end
 
         if (j>0)  acc = 1;  
       #0.5 clk = 1'b1;   

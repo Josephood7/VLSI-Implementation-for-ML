@@ -109,7 +109,7 @@ initial begin
   mode = {`OS, `BIT4};
   reset_hardware();
   $display("Part 3: Output stationary");
-  run_sim("activation.txt", "weight", "output.txt");
+  run_sim("txt_files/activation.txt", "txt_files/weight", "txt_files/output.txt");
 
   #10 $finish;
 end
@@ -390,12 +390,21 @@ task run_sim;
     #0.5 clk = 1'b1;  
     #0.5 clk = 1'b0; reset = 0; 
     #0.5 clk = 1'b1;  
+    A_pmem = 0;
 
     for (j=0; j<len_kij+1; j=j+1) begin 
 
       #0.5 clk = 1'b0;   
-        if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
-        else  begin CEN_pmem = 1; WEN_pmem = 1; end
+        if (j<len_kij) begin
+          CEN_pmem = 0; WEN_pmem = 1; 
+          case((j / len_kij_sqrt) % len_kij_sqrt)
+            0: A_pmem = (11'd0 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt);   // 0
+            1: A_pmem = (11'd114 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt); // 114
+            2: A_pmem = (11'd228 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt); // 228
+          endcase
+        end else begin
+          CEN_pmem = 1; WEN_pmem = 1;
+        end
 
         if (j>0)  acc = 1;  
       #0.5 clk = 1'b1;   
