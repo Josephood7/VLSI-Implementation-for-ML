@@ -76,6 +76,7 @@ integer captured_data;
 integer t, i, j, k, kij;
 integer error;
 
+assign inst_q[34] = relu_q;
 assign inst_q[33] = acc_q;
 assign inst_q[32] = CEN_pmem_q;
 assign inst_q[31] = WEN_pmem_q;
@@ -159,6 +160,7 @@ task run_sim;
   l0_wr    = 0;
   execute  = 0;
   load     = 0;
+  relu     = 0;
 
   //x_file = $fopen("activation_tile0.txt", "r");
   x_file = $fopen(act_file, "r");

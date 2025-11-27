@@ -78,6 +78,7 @@ integer captured_data;
 integer t, i, j, k, kij;
 integer error;
 
+assign inst_q[34] = relu_q;
 assign inst_q[33] = acc_q;
 assign inst_q[32] = CEN_pmem_q;
 assign inst_q[31] = WEN_pmem_q;
@@ -135,9 +136,9 @@ task reset_hardware;
 endtask
 
 task run_sim;
-  input [8*30:1] act_file;
-  input [8*30:1] wgt_file;
-  input [8*30:1] out_file;
+  input [8*40:1] act_file;
+  input [8*40:1] wgt_file;
+  input [8*40:1] out_file;
   begin
   inst_w   = 0; 
   D_xmem   = 0;
@@ -151,6 +152,7 @@ task run_sim;
   l0_wr    = 0;
   execute  = 0;
   load     = 0;
+  relu     = 0;
 
   //x_file = $fopen("activation_tile0.txt", "r");
   x_file = $fopen(act_file, "r");
@@ -158,8 +160,6 @@ task run_sim;
   x_scan_file = $fscanf(x_file,"%s", captured_data);
   x_scan_file = $fscanf(x_file,"%s", captured_data);
   x_scan_file = $fscanf(x_file,"%s", captured_data);
-
-
 
   /////// Activation data writing to memory ///////
   for (t=0; t<len_nij; t=t+1) begin  

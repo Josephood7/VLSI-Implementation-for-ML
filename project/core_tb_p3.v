@@ -155,6 +155,7 @@ task run_sim;
   l0_wr    = 0;
   execute  = 0;
   load     = 0;
+  relu     = 0;
 
   //x_file = $fopen("activation_tile0.txt", "r");
   x_file = $fopen(act_file, "r");
@@ -295,12 +296,16 @@ task run_sim;
     #0.5 clk = 1'b1;
     for (t=0; t<len_nij; t=t+1) begin  
       #0.5 clk = 1'b0;  
-      l0_wr = 1;
+      if(mode[1] == `WS) l0_wr = 1;
+      else if(mode[1] == `OS) ififo_wr = 1;
       A_xmem = A_xmem + 1;
       #0.5 clk = 1'b1;
     end
 
-    #0.5 clk = 1'b0;  l0_wr = 0; WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0;
+    #0.5 clk = 1'b0;  
+    if(mode[1] == `WS) l0_wr = 0;
+    else if(mode[1] == `OS) ififo_wr = 0; 
+    WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0;
     #0.5 clk = 1'b1; 
     /////////////////////////////////////
 
@@ -311,11 +316,13 @@ task run_sim;
       #0.5 clk = 1'b0;
       if(t >= len_nij)begin
         execute = 0;
-        l0_rd = 0;
+        if(mode[1] == `WS) l0_rd = 0;
+        else if(mode[1] == `OS) ififo_rd = 0;
       end
       else begin
         execute = 1;
-        l0_rd = 1; 
+        if(mode[1] == `WS) l0_rd = 1;
+        else if(mode[1] == `OS) ififo_rd = 1;
       end
       
       #0.5 clk = 1'b1;
@@ -323,7 +330,8 @@ task run_sim;
     end
       #0.5 clk = 1'b0;
       execute = 0;
-      l0_rd = 0;
+      if(mode[1] == `WS) l0_rd = 1;
+      else if(mode[1] == `OS) ififo_rd = 1;
       load = 0;
       #0.5 clk = 1'b1;
     /////////////////////////////////////
