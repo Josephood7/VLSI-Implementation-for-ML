@@ -14,11 +14,13 @@ parameter len_onij = 16; // output image = 4 x 4
 parameter col = 8;
 parameter row = 8;
 parameter len_nij = 36;  // input image = 6 x 6
+parameter len_kij_sqrt = 3;
+parameter len_onij_sqrt = 4;
 
 reg clk = 0;
 reg reset = 1;
 
-wire [33:0] inst_q; 
+wire [34:0] inst_q; 
 
 reg [1:0]  inst_w_q = 0; 
 reg [bw*row-1:0] D_xmem_q = 0;  // Memory Data
@@ -43,12 +45,13 @@ reg execute_q = 0;
 reg load_q = 0;
 reg acc_q = 0;
 reg acc = 0;
+reg relu_q = 0;
 
 reg [1:0]  inst_w; 
 reg [bw*row-1:0] D_xmem;
 reg [psum_bw*col-1:0] answer;
 
-
+reg relu;
 reg ofifo_rd;
 reg ififo_wr;
 reg ififo_rd;
@@ -62,7 +65,7 @@ wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
 
 reg [31:0] D_2D [63:0];
-reg mode = `BIT4;
+reg [1:0] mode = 0;
 
 
 integer x_file, x_scan_file ; // file_handler
@@ -104,7 +107,7 @@ initial begin
   $dumpvars(0,core_tb);
 
   // 2-bit mode
-  mode = `BIT2;
+  mode = {`WS, `BIT2};
   reset_hardware();
   $display("Part 2: 2-bit mode test");
   run_sim("activation.txt", "weight", "output.txt");
@@ -112,7 +115,7 @@ initial begin
   // 4-bit mode
   #20;
   reset_hardware();
-  mode = `BIT4;
+  mode = {`WS, `BIT4};
   $display("Part 2: 4-bit mode test");
   run_sim("activation.txt", "weight", "output.txt");
 
@@ -369,7 +372,7 @@ task run_sim;
 
   for (i=0; i<len_onij+1; i=i+1) begin 
 
-    #0.5 clk = 1'b0; 
+    #0.5 clk = 1'b0; relu = 0;
     #0.5 clk = 1'b1; 
 
     if (i>0) begin
@@ -393,17 +396,26 @@ task run_sim;
     for (j=0; j<len_kij+1; j=j+1) begin 
 
       #0.5 clk = 1'b0;   
-        if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
-        else  begin CEN_pmem = 1; WEN_pmem = 1; end
-
+        if (j<len_kij) begin
+          CEN_pmem = 0; WEN_pmem = 1; 
+          case((j / len_kij_sqrt) % len_kij_sqrt)
+            0: A_pmem = (11'd0 + i) + 11'd37 * (j % len_kij_sqrt) + 11'd2 * (i / len_onij_sqrt); // 0, 114, 228
+            1: A_pmem = (11'd114 + i) + 11'd37 * (j % len_kij_sqrt) + 11'd2 * (i / len_onij_sqrt);
+            2: A_pmem = (11'd228 + i) + 11'd37 * (j % len_kij_sqrt) + 11'd2 * (i / len_onij_sqrt);
+          endcase
+          //acc_scan_file = $fscanf(acc_file, "%11b", A_pmem_tmp);
+          //$display("%11b, %11b", A_pmem, A_pmem_tmp);
+        end else begin
+          CEN_pmem = 1; WEN_pmem = 1;
+        end
         if (j>0)  acc = 1;  
       #0.5 clk = 1'b1;   
     end
 
-    #0.5 clk = 1'b0; acc = 0;
+    #0.5 clk = 1'b0; acc = 0; relu = 1;
     #0.5 clk = 1'b1; 
   end
-
+  relu = 0;
 
   if (error == 0) begin
   	$display("############ No error detected ##############"); 
@@ -440,6 +452,7 @@ always @ (posedge clk) begin
    l0_wr_q    <= l0_wr ;
    execute_q  <= execute;
    load_q     <= load;
+   relu_q     <= relu;
 end
 
 
