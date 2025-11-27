@@ -105,18 +105,9 @@ initial begin
   $dumpfile("core_tb.vcd");
   $dumpvars(0,core_tb);
 
-  // 2-bit mode
-  mode = `BIT2;
   reset_hardware();
-  $display("Part 2: 2-bit mode test");
-  run_sim("activation.txt", "weight", "output.txt");
-
-  // 4-bit mode
-  #20;
-  reset_hardware();
-  mode = `BIT4;
-  $display("Part 2: 4-bit mode test");
-  run_sim("activation.txt", "weight", "output.txt");
+  $display("Part 1: test");
+  run_sim("txt_files/activation.txt", "txt_files/weight", "txt_files/output.txt");
 
   #10 $finish;
 end
