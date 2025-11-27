@@ -3,9 +3,9 @@ module sfu(
     input rst,
     input in_valid, // When valid == 1, data transfer into SFU. Also override Relu request.
     input signed [psum_bw-1 : 0] in,
-    output signed [psum_bw-1 : 0] out
+    output signed [psum_bw-1 : 0] out,
+    input relu_valid
 );
-parameter bw = 4;
 parameter psum_bw = 16;
 reg signed [psum_bw - 1 : 0] psum;
 assign out = psum;

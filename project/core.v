@@ -1,7 +1,7 @@
 module core  (
 	input clk,
     input reset,
-	input [33:0] inst,
+	input [34:0] inst,
 	output ofifo_valid,
     input [bw*row-1 : 0 ]  D_xmem, 
     output [psum_bw*col-1 : 0 ] sfp_out
@@ -27,8 +27,7 @@ sram_32b_w2048 #(
 
 wire [127:0] D_pmem, Q_pmem;
 genvar i;
-generate
-  for(i = 0; i < 4; i = i + 1) begin : sram_num
+for(i = 0; i < 4; i = i + 1)begin
     sram_32b_w2048 #(
     .num(2048)
     ) partial_mem(
@@ -39,15 +38,12 @@ generate
         .A(inst[30:20]),
         .Q(Q_pmem[(i+1) * 32 - 1: i*32])
     );
-  end
-endgenerate
+end
+
 
 
 corelet #(
-	.bw(bw),
-	.col(col),
-	.psum_bw(psum_bw),
-	.row(row)
+
 ) corelet_inst(
     .clk(clk),
     .reset(reset),
@@ -61,7 +57,8 @@ corelet #(
     .ofifo_rd(inst[6]),
     .ofifo_valid(ofifo_valid),
     .psum_out(D_pmem),
-    .out_data(sfp_out)
+    .out_data(sfp_out),
+    .relu_valid(inst[34])
 
 );
 
