@@ -390,9 +390,9 @@ task run_sim;
         if (j<len_kij) begin
           CEN_pmem = 0; WEN_pmem = 1; 
           case((j / len_kij_sqrt) % len_kij_sqrt)
-            0: A_pmem = (11'd0 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt); // 0, 114, 228
-            1: A_pmem = (11'd114 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt);
-            2: A_pmem = (11'd228 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt);
+			  0: A_pmem = (11'd0 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt);   // 0
+			  1: A_pmem = (11'd114 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt); // 114
+			  2: A_pmem = (11'd228 + (j % len_kij)) + 11'd37 * (j % len_kij_sqrt); // 228
           endcase
         end else begin
           CEN_pmem = 1; WEN_pmem = 1;
