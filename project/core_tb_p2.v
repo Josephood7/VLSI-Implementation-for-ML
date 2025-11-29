@@ -111,14 +111,14 @@ initial begin
   mode = {`WS, `BIT2};
   reset_hardware();
   $display("Part 2: 2-bit mode test");
-  run_sim("activation.txt", "weight", "output.txt");
+  run_sim("txt_2bit/activation.txt", "txt_2bit/weight", "txt_2bit/output.txt");
 
   // 4-bit mode
   #20;
   reset_hardware();
   mode = {`WS, `BIT4};
   $display("Part 2: 4-bit mode test");
-  run_sim("activation.txt", "weight", "output.txt");
+  run_sim("txt_4bit/activation.txt", "txt_4bit/weight", "txt_4bit/output.txt");
 
   #10 $finish;
 end
@@ -232,7 +232,7 @@ task run_sim;
 
     for (t=0; t<col; t=t+1) begin  
       #0.5 clk = 1'b0;  
-      w_scan_file = $fscanf(w_file,"%32b", D_xmem); 
+      w_scan_file = (mode[0])? $fscanf(w_file,"%64b", D_xmem) : $fscanf(w_file,"%32b", D_xmem); 
       WEN_xmem = 0; CEN_xmem = 0; 
       if (t>0) A_xmem = A_xmem + 1; 
       #0.5 clk = 1'b1;  
