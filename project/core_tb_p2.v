@@ -4,6 +4,8 @@
 
 `define BIT4 0
 `define BIT2 1
+`define WS 0
+`define OS 1
 
 module core_tb;
 
