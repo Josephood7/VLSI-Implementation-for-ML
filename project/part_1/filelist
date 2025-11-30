@@ -1,5 +1,6 @@
 mac.v
 mac_tile.v
+huffman_decoder.v
 core.v
 corelet.v
 fifo_depth64.v

@@ -48,11 +48,13 @@ reg load_q = 0;
 reg acc_q = 0;
 reg acc = 0;
 reg relu_q = 0;
+reg huff_valid_q;
 
 reg [1:0]  inst_w; 
 reg [bw*row-1:0] D_xmem;
 reg [psum_bw*col-1:0] answer;
 
+reg huff_valid;
 reg relu;
 reg ofifo_rd;
 reg ififo_wr;
@@ -65,6 +67,7 @@ reg [8*30:1] stringvar;
 reg [8*30:1] w_file_name;
 wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
+wire data_ready_huff;
 
 reg [31:0] D_2D [63:0];
 reg [1:0] mode = 0;
@@ -78,6 +81,7 @@ integer captured_data;
 integer t, i, j, k, kij;
 integer error;
 
+assign inst_q[35] = huff_valid_q;
 assign inst_q[34] = relu_q;
 assign inst_q[33] = acc_q;
 assign inst_q[32] = CEN_pmem_q;
@@ -101,6 +105,7 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
 	.ofifo_valid(ofifo_valid),
   .D_xmem(D_xmem_q), 
   .sfp_out(sfp_out), 
+  .data_ready_huff(data_ready_huff),
 	.reset(reset)); 
 
 
@@ -110,8 +115,9 @@ initial begin
 
   reset_hardware();
   $display("Part 1: test");
-  run_sim("txt_files/activation.txt", "txt_files/weight", "txt_files/output.txt");
+  //run_sim("txt_files/activation.txt", "txt_files/weight", "txt_files/output.txt");
   //run_sim("activation.txt", "weight", "output.txt");
+  run_sim("txt_files/activation.txt", "txt_files_encoded/weight_encoded", "txt_files/output.txt");
   #10 $finish;
 end
 
@@ -153,6 +159,7 @@ task run_sim;
   execute  = 0;
   load     = 0;
   relu     = 0;
+  huff_valid = 0;
 
   //x_file = $fopen("activation_tile0.txt", "r");
   x_file = $fopen(act_file, "r");
@@ -234,8 +241,27 @@ task run_sim;
     #0.5 clk = 1'b1; 
     /////////////////////////////////////
 
+    /////// Kernel data writing to huffman decoder ///////
+    A_xmem = 11'b10000000000;
+    #0.5 clk = 1'b0; WEN_mem = 1; CEN_xmem = 0; 
+    #0.5 clk = 1'b1;
+    for (t=0; t<col; t=t+1) begin  
+      #0.5 clk = 1'b0;  
+      wait(data_ready_huff);
+      huff_valid = 1;
+      //l0_wr = 1; 
+      A_xmem = A_xmem + 1;
+      #0.5 clk = 1'b1;
+    end
 
+    #0.5 clk = 1'b0;  
+    WEN_xmem = 1;  CEN_xmem = 1;
+    huff_valid = 0; //l0_wr = 0; 
+    A_xmem = 0;
+    #0.5 clk = 1'b1; 
+    /////////////////////////////////////
 
+    /*
     /////// Kernel data writing to L0 ///////
     A_xmem = 11'b10000000000;
     #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0; 
@@ -252,7 +278,7 @@ task run_sim;
     l0_wr = 0; A_xmem = 0;
     #0.5 clk = 1'b1; 
     /////////////////////////////////////
-
+    */
 
 
     /////// Kernel loading to PEs ///////
@@ -451,6 +477,7 @@ always @ (posedge clk) begin
    execute_q  <= execute;
    load_q     <= load;
    relu_q     <= relu;
+   huff_valid_q <= huff_valid;
 end
 
 

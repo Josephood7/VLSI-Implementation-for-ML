@@ -8,7 +8,7 @@ module huffman_decoder (
     output reg data_ready,          // "I can accept 32 more bits"
 
     // Output Interface (To L0 / Computation)
-    output reg [3:0] symbol_out,    // Decoded 4-bit weight
+    output reg [31:0] symbol_out,    // Decoded 4-bit weight
     output reg symbol_valid         // "This weight is valid now"
 );
 
@@ -53,77 +53,77 @@ module huffman_decoder (
             buffer[1:0] == 2'b00: begin
                 symbol_out = 4'b0000; // Original: 0000, Code: 00
                 bits_consumed = 2;
-                valid = 1;
+                //valid = 1;
             end
             buffer[2:0] == 3'b011: begin
                 symbol_out = 4'b0001; // Original: 0001, Code: 110
                 bits_consumed = 3;
-                valid = 1;
+                //valid = 1;
             end
             buffer[2:0] == 3'b010: begin
                 symbol_out = 4'b1110; // Original: 1110, Code: 010
                 bits_consumed = 3;
-                valid = 1;
+                //valid = 1;
             end
             buffer[2:0] == 3'b101: begin
                 symbol_out = 4'b1111; // Original: 1111, Code: 101
                 bits_consumed = 3;
-                valid = 1;
+                //valid = 1;
             end
             buffer[3:0] == 4'b0111: begin
                 symbol_out = 4'b0010; // Original: 0010, Code: 1110
                 bits_consumed = 4;
-                valid = 1;
+                //valid = 1;
             end
             buffer[3:0] == 4'b0001: begin
                 symbol_out = 4'b0111; // Original: 0111, Code: 1000
                 bits_consumed = 4;
-                valid = 1;
+                //valid = 1;
             end
             buffer[3:0] == 4'b1110: begin
                 symbol_out = 4'b1101; // Original: 1101, Code: 0111
                 bits_consumed = 4;
-                valid = 1;
+                //valid = 1;
             end
             buffer[4:0] == 5'b01001: begin
                 symbol_out = 4'b0011; // Original: 0011, Code: 10010
                 bits_consumed = 5;
-                valid = 1;
+                //valid = 1;
             end
             buffer[4:0] == 5'b00110: begin
                 symbol_out = 4'b0100; // Original: 0100, Code: 01100
                 bits_consumed = 5;
-                valid = 1;
+                //valid = 1;
             end
             buffer[4:0] == 5'b11111: begin
                 symbol_out = 4'b1001; // Original: 1001, Code: 11111
                 bits_consumed = 5;
-                valid = 1;
+                //valid = 1;
             end
             buffer[4:0] == 5'b11001: begin
                 symbol_out = 4'b1100; // Original: 1100, Code: 10011
                 bits_consumed = 5;
-                valid = 1;
+                //valid = 1;
             end
             buffer[5:0] == 6'b001111: begin
                 symbol_out = 4'b0101; // Original: 0101, Code: 111100
                 bits_consumed = 6;
-                valid = 1;
+                //valid = 1;
             end
             buffer[5:0] == 6'b010110: begin
                 symbol_out = 4'b0110; // Original: 0110, Code: 011010
                 bits_consumed = 6;
-                valid = 1;
+                //valid = 1;
             end
             buffer[5:0] == 6'b110110: begin
                 symbol_out = 4'b1010; // Original: 1010, Code: 011011
                 bits_consumed = 6;
-                valid = 1;
+                //valid = 1;
             end
             buffer[5:0] == 6'b101111: begin
                 symbol_out = 4'b1011; // Original: 1011, Code: 111101
                 bits_consumed = 6;
-                valid = 1;
+                //valid = 1;
             end
 
         endcase
@@ -136,18 +136,18 @@ module huffman_decoder (
             count <= 0;
             symbol_out <= 0;
             symbol_valid <= 0;
-            data_ready <= 0;
+            data_ready <= 1;
         end else begin
             symbol_valid <= 0; // Pulse valid for 1 cycle
             
             // A. Decode Success
             if (count > 0 && match_found) begin
-                symbol_out <= next_symbol;
-                symbol_valid <= 1;
+                symbol_out[31:28] <= next_symbol;
+                symbol_out <= symbol_out >> 4;
             end
 
             // B. Shift Buffer & Load New Data
-            if ((count > 0 && match_found) && (data_valid && data_ready)) begin
+            if ((count > 0 && match_found) && (data_valid)) begin
                 // Shift out used bits, Shift in new 32 bits
                 buffer <= (buffer >> bits_consumed) | ({32'b0, data_in_reversed} << (count - bits_consumed));
                 count <= (count - bits_consumed) + 32;
@@ -158,7 +158,7 @@ module huffman_decoder (
                 buffer <= buffer >> bits_consumed;
                 count <= count - bits_consumed;
             end
-            else if (data_valid && data_ready) begin
+            else if (data_valid) begin
                 // Just load new data
                 buffer <= buffer | ({32'b0, data_in_reversed} << count);
                 count <= count + 32;
@@ -167,10 +167,13 @@ module huffman_decoder (
             
             // C. Flow Control
             // If we have empty space for a full 32-bit word, ask for more.
-            if (count <= 32) 
+            if (count == 32) begin
                 data_ready <= 1;
-            else 
+                symbol_valid <= 1;
+            end else begin 
                 data_ready <= 0;
+                symbol_valid <= 0;
+            end
         end
     end
 

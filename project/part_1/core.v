@@ -1,16 +1,16 @@
 module core  (
 	input clk,
     input reset,
-	input [34:0] inst,
+	input [35:0] inst,
 	output ofifo_valid,
     input [bw*row-1 : 0 ]  D_xmem, 
-    output [psum_bw*col-1 : 0 ] sfp_out
+    output [psum_bw*col-1 : 0 ] sfp_out,
+    output data_ready_huff
 ); 
-    parameter bw  = 8;
+    parameter bw  = 4;
     parameter col = 8;
     parameter psum_bw = 16;
-    parameter row = 4;
-
+    parameter row = 8;
 
 wire [31:0] Q_xmem;
 wire l0_or_ififo;
@@ -23,6 +23,18 @@ sram_32b_w2048 #(
     .D(D_xmem),
     .A(inst[17:7]),
     .Q(Q_xmem)
+);
+
+wire [31:0] decoded_data;
+wire        symbol_valid;
+huffman_decoder compression(
+    .clk(clk),
+    .reset(reset),
+    .data_in(Q_xmem),
+    .data_valid(inst[35]),
+    .data_ready(data_ready_huff),
+    .symbol_out(decoded_data),
+    .symbol_valid(symbol_valid)
 );
 
 wire [127:0] D_pmem, Q_pmem;
@@ -54,8 +66,8 @@ corelet #(
     .inst(inst[1:0]), // 1st bit : execute  0th: Load Kernel
     .l0_or_ififo(inst[17]),
     .l0_rd(inst[3]),
-    .l0_wr(inst[2]),
-    .in_data(Q_xmem),
+    .l0_wr(symbol_valid),
+    .in_data(decoded_data), // Q_xmem
     .psum_accum_in(Q_pmem),
     .accum(inst[33]), 
     .ofifo_rd(inst[6]),
