@@ -11,8 +11,6 @@ parameter len_onij = 16; // output image = 4 x 4
 parameter col = 8;
 parameter row = 8;
 parameter len_nij = 36;  // input image = 6 x 6
-parameter len_kij_sqrt = 3;
-parameter len_onij_sqrt = 4;
 
 reg clk = 0;
 reg reset = 1;
