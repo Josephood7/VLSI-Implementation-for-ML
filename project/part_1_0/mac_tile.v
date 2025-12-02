@@ -20,11 +20,12 @@ reg [bw-1:0]b_q;
 reg [psum_bw-1:0]c_q;
 reg load_ready_q;
 wire [psum_bw - 1 : 0] mac_out;
+wire enable;
 
 assign out_e = a_q;
 assign inst_e = inst_q;
 assign out_s = mac_out;
-
+assign enable = |inst_w;
 
 mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance (
         .a(a_q), 
@@ -41,7 +42,7 @@ always @(posedge clk)begin
                 b_q <= 0;
                 c_q <= 0;
         end
-        else begin
+        else if(enable) begin
                 if(inst_w)begin
                         a_q <= in_w;
                 end
