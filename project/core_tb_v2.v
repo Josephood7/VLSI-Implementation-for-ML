@@ -69,7 +69,6 @@ integer captured_data;
 integer t, i, j, k, kij;
 integer error;
 
-assign inst_q[34] = relu_q;
 assign inst_q[33] = acc_q;
 assign inst_q[32] = CEN_pmem_q;
 assign inst_q[31] = WEN_pmem_q;
@@ -108,7 +107,6 @@ initial begin
   l0_wr    = 0;
   execute  = 0;
   load     = 0;
-  relu     = 0;
 
   $dumpfile("core_tb.vcd");
   $dumpvars(0,core_tb);
@@ -358,7 +356,6 @@ initial begin
     #0.5 clk = 1'b0; reset = 0; 
     #0.5 clk = 1'b1;  
     A_pmem = 0;
-    A_pmem_tmp = 0;
 
     for (j=0; j<len_kij+1; j=j+1) begin 
 
